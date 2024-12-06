@@ -27,7 +27,7 @@ jobs:
           echo "$(dotnet tool list -g | grep sonarscanner | awk '{print $4}')" >> $GITHUB_PATH
 
       - name: SonarCloud - Begin Analysis
-        run: dotnet sonarscanner begin /o:"your-organization" /k:"your-project-key" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        run: dotnet sonarscanner begin /o:"x00218712" /k:"x00218712_testr" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
       - name: Build project
         run: dotnet build YourProject.sln
