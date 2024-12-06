@@ -1,0 +1,34 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- checkout: self
+  fetchDepth: 0
+  
+  
+
+- task: SonarCloudPrepare@3
+  inputs:
+    SonarQube: 'rts-con'
+    organization: 'x00218712'
+    scannerMode: 'cli'
+    configMode: 'manual'
+    cliProjectKey: 'X00218712_rts'
+    cliProjectName: 'rts'
+    cliSources: '.'
+- task: SonarCloudAnalyze@3
+  inputs:
+    jdkversion: 'JAVA_HOME_17_X64'
+
+
+- task: SonarCloudPublish@3
+  inputs:
+    pollingTimeoutSec: '300'
