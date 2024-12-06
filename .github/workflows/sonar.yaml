@@ -1,33 +1,23 @@
-name: SonarCloud Analysis
+# Sonar cloud scan
 
+name: SonarCloud
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:                             
 
 jobs:
-  sonarcloud:
+  scan_code:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.x'
-
-    - name: Install SonarScanner for .NET
-      run: dotnet tool install --global dotnet-sonarscanner
-
-    - name: SonarCloud - Begin Analysis
-      run: dotnet sonarscanner begin /o:"x00218712" /k:"x00218712_testr" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-
-    - name: Build project
-      run: dotnet build your_project.sln
-
-    - name: Test project
-      run: dotnet test your_project.sln
-
-    - name: SonarCloud - End Analysis
-      run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.organization=x00218712
+            -Dsonar.projectKey=testr
+        env:
+          
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
