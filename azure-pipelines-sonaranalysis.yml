@@ -4,31 +4,64 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- master
+- master  # Trigger the pipeline when changes are pushed to the master branch.
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'windows-latest'  # Use Windows-based virtual machine.
 
 steps:
 - checkout: self
-  fetchDepth: 0
-  
-  
+  fetchDepth: 0  # Fetch full history for accurate SonarCloud analysis.
 
+# Step 1: Prepare analysis with SonarCloud
 - task: SonarCloudPrepare@3
   inputs:
-    SonarQube: 'rts-con'
-    organization: 'x00218712'
-    scannerMode: 'cli'
+    SonarQube: 'rts-con'  # Connection to SonarCloud; configured in Azure DevOps Service connections.
+    organization: 'x00218712'  # Your SonarCloud organization key.
+    scannerMode: 'CLI'  # Use Command Line Interface (CLI) mode.
     configMode: 'manual'
-    cliProjectKey: 'X00218712_rts'
-    cliProjectName: 'rts'
-    cliSources: '.'
-- task: SonarCloudAnalyze@3
+    cliProjectKey: 'X00218712_rts'  # The unique project key for your project in SonarCloud.
+    cliProjectName: 'rts'  # Display name for your project in SonarCloud.
+    cliSources: '.'  # Specifies the root folder for scanning.
+
+# Step 2: Install .NET SDK and Restore Dependencies
+- task: UseDotNet@2
   inputs:
-    jdkversion: 'JAVA_HOME_17_X64'
+    packageType: 'sdk'
+    version: '6.x'  # Specify the version of the .NET SDK to use.
+    installationPath: $(Agent.ToolsDirectory)/dotnet
 
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'  # Restore all the projects in the solution to resolve all dependencies.
 
+# Step 3: Build Solution
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration Release'  # Build the project in Release configuration.
+
+# Step 4: Run Unit Tests
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: '**/*Tests/*.csproj'  # Discover and run unit tests in projects under "Tests" directory.
+    arguments: '--configuration Release --logger trx'  # Output the test results as trx files.
+  
+# Step 5: SonarCloud Code Analysis
+- task: SonarCloudAnalyze@3
+
+# Step 6: Publish SonarCloud Quality Gate Result
 - task: SonarCloudPublish@3
   inputs:
-    pollingTimeoutSec: '300'
+    pollingTimeoutSec: '300'  # Wait up to 5 minutes for SonarCloud to return the analysis results.
+
+# Step 7: Publish Test Results (Optional Step to Publish Test Reports)
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '**/*.trx'
+    failTaskOnFailedTests: true
+
